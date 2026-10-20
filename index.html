@@ -1,0 +1,437 @@
+
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICT Quiz Arena</title>
+<style>
+:root {
+  --bg: #08111f;
+  --panel: #111e31;
+  --line: #293b54;
+  --cyan: #48e0e8;
+  --text: #f4f7fb;
+  --muted: #9caec4;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, "Segoe UI", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at top, #17314a 0%, transparent 58%),
+    var(--bg);
+  display: grid;
+  place-items: center;
+  padding: 24px 14px;
+}
+button { font: inherit; }
+.app { width: 100%; max-width: 760px; }
+.brand {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.logo {
+  display: inline-grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border: 1px solid #387b91;
+  border-radius: 16px;
+  color: var(--cyan);
+  font-size: 26px;
+  background: #10283a;
+}
+.brand h1 { margin: 12px 0 6px; font-size: clamp(27px, 5vw, 38px); }
+.brand p, .muted { color: var(--muted); }
+.card {
+  background: rgba(17, 30, 49, .96);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: clamp(20px, 5vw, 36px);
+  box-shadow: 0 24px 70px #0005;
+}
+.eyebrow {
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+h2 { font-size: clamp(22px, 4vw, 30px); line-height: 1.35; }
+input, select {
+  width: 100%;
+  color: var(--text);
+  background: #0b1727;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 13px;
+  margin: 8px 0 18px;
+}
+label { font-size: 14px; color: #dce7f4; }
+.btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  font-weight: 750;
+  transition: transform .15s, opacity .15s;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:focus-visible, .option:focus-visible {
+  outline: 3px solid white;
+  outline-offset: 3px;
+}
+.primary {
+  width: 100%;
+  color: #06131d;
+  background: var(--cyan);
+}
+.secondary {
+  color: var(--text);
+  background: #21324a;
+  border: 1px solid #3a506c;
+}
+.topline, .stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.pill {
+  background: #1b3046;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+.timer { color: var(--cyan); font-weight: 800; }
+.track {
+  height: 7px;
+  background: #26364b;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 22px 0 28px;
+}
+#progress {
+  height: 100%;
+  width: 0;
+  background: var(--cyan);
+  transition: width .25s;
+}
+.options { display: grid; gap: 12px; }
+.option {
+  text-align: left;
+  width: 100%;
+  border: 1px solid #30445e;
+  background: #14243a;
+  color: var(--text);
+  padding: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.option:hover:not(:disabled) {
+  border-color: var(--cyan);
+  background: #1a3047;
+}
+.letter {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #263c54;
+  font-weight: 800;
+}
+.option.correct {
+  border-color: #4ade80;
+  background: #123528;
+}
+.option.wrong {
+  border-color: #fb7185;
+  background: #40202c;
+}
+.option:disabled { cursor: default; }
+#feedback {
+  min-height: 28px;
+  margin: 18px 0 8px;
+  font-weight: 700;
+}
+.good { color: #4ade80; }
+.bad { color: #fb7185; }
+#result { text-align: center; }
+.score {
+  font-size: 62px;
+  color: var(--cyan);
+  font-weight: 900;
+  margin: 14px 0;
+}
+.hidden { display: none !important; }
+.stats { margin: 22px 0; }
+.stat {
+  flex: 1;
+  padding: 15px 6px;
+  border-radius: 12px;
+  background: #0b1727;
+}
+.stat strong { display: block; font-size: 23px; }
+.stat span { color: var(--muted); font-size: 12px; }
+footer {
+  text-align: center;
+  color: #8193aa;
+  font-size: 12px;
+  margin-top: 20px;
+}
+@media(max-width: 450px) {
+  .topline { align-items: flex-start; flex-wrap: wrap; }
+  .stats { gap: 7px; }
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="brand">
+    <div class="logo">✦</div>
+    <h1>ICT Quiz Arena</h1>
+    <p>Uji ilmu. Cabar minda. Kumpul skor.</p>
+  </header>
+
+  <section class="card" id="welcome">
+    <div class="eyebrow">CHALLENGE YOURSELF</div>
+    <h2>Ready untuk cabaran ICT?</h2>
+    <p class="muted">Jawab 10 soalan, kejar masa dan tengok berapa tinggi skor kau.</p>
+    <label for="player">Nama pemain</label>
+    <input id="player" maxlength="30" placeholder="Masukkan nama kau">
+    <label for="difficulty">Tahap kesukaran</label>
+    <select id="difficulty">
+      <option value="all">Campuran</option>
+      <option value="easy">Mudah</option>
+      <option value="hard">Mencabar</option>
+    </select>
+    <button class="btn primary" id="start">MULA BERMAIN →</button>
+  </section>
+
+  <section class="card hidden" id="quiz">
+    <div class="topline">
+      <span class="pill" id="playerTag">Pemain</span>
+      <span class="pill">SOALAN <span id="number">1</span>/10</span>
+      <span class="pill timer">◷ <span id="time">15</span>s</span>
+    </div>
+    <div class="track"><div id="progress"></div></div>
+    <div class="eyebrow" id="category">ICT BASICS</div>
+    <h2 id="question">Soalan akan muncul di sini</h2>
+    <div class="options" id="options"></div>
+    <p id="feedback" aria-live="polite"></p>
+    <button class="btn primary hidden" id="next">SOALAN SETERUSNYA →</button>
+  </section>
+
+  <section class="card hidden" id="result">
+    <div class="eyebrow">CABARAN SELESAI</div>
+    <h2 id="resultTitle">Syabas!</h2>
+    <p class="muted">Inilah keputusan kau untuk sesi ini.</p>
+    <div class="score"><span id="finalScore">0</span><span style="font-size:24px">/100</span></div>
+    <p id="message"></p>
+    <div class="stats">
+      <div class="stat"><strong id="correctCount">0</strong><span>Betul</span></div>
+      <div class="stat"><strong id="wrongCount">0</strong><span>Salah</span></div>
+      <div class="stat"><strong id="accuracy">0%</strong><span>Ketepatan</span></div>
+    </div>
+    <button class="btn primary" id="restart">MAIN LAGI ↻</button>
+  </section>
+  <footer>ICT QUIZ ARENA · Built for curious minds</footer>
+</main>
+
+<script>
+const bank = [
+  {q:"Apakah fungsi utama CPU dalam komputer?",
+   o:["Mencetak dokumen","Memproses arahan dan data","Menyambung Wi-Fi","Menyimpan fail secara kekal"],
+   a:1,c:"Perkakasan",d:"easy"},
+  {q:"Antara berikut, yang manakah sistem operasi?",
+   o:["Google Chrome","Microsoft Word","Windows 11","Adobe Photoshop"],
+   a:2,c:"Sistem Operasi",d:"easy"},
+  {q:"Apakah tujuan utama penggunaan kata laluan yang kuat?",
+   o:["Mempercepatkan internet","Melindungi akaun daripada akses tanpa izin","Menambah ruang storan","Mencerahkan skrin"],
+   a:1,c:"Keselamatan",d:"easy"},
+  {q:"Apakah maksud phishing?",
+   o:["Kaedah menipu untuk mencuri maklumat sensitif","Teknik menyejukkan CPU","Cara membuat sandaran","Protokol rangkaian"],
+   a:0,c:"Keselamatan Siber",d:"easy"},
+  {q:"Apakah fungsi RAM?",
+   o:["Menyimpan data sementara ketika program berjalan","Menyimpan fail walaupun komputer ditutup","Mengawal bekalan elektrik rumah","Mencetak imej"],
+   a:0,c:"Perkakasan",d:"easy"},
+  {q:"Apakah maksud 2FA dalam keselamatan akaun?",
+   o:["Two File Access","Two-Factor Authentication","Fast File Allocation","Two-Folder Application"],
+   a:1,c:"Keselamatan Siber",d:"hard"},
+  {q:"Apakah kegunaan DNS di internet?",
+   o:["Menukar nama domain kepada alamat IP berkaitan","Mengecas bateri komputer","Memadam virus secara automatik","Meningkatkan saiz RAM"],
+   a:0,c:"Rangkaian",d:"hard"},
+  {q:"Apakah perbezaan utama HTTP dan HTTPS?",
+   o:["HTTPS lazimnya melindungi komunikasi menggunakan penyulitan TLS","HTTP hanya boleh digunakan di telefon","HTTPS tidak memerlukan internet","HTTP lebih selamat dalam semua keadaan"],
+   a:0,c:"Internet",d:"hard"},
+  {q:"Apakah fungsi sandaran (backup) data?",
+   o:["Menambah kelajuan kipas","Membolehkan data dipulihkan jika hilang atau rosak","Menukar resolusi skrin","Memadam semua fail lama"],
+   a:1,c:"Pengurusan Data",d:"easy"},
+  {q:"Apakah maksud alamat IP?",
+   o:["Nama model papan kekunci","Alamat pengenalan peranti dalam rangkaian IP","Jenis format gambar","Kata laluan akaun"],
+   a:1,c:"Rangkaian",d:"hard"},
+  {q:"Apakah kegunaan pengurus kata laluan?",
+   o:["Menyimpan dan mengurus kata laluan dengan lebih selamat","Meningkatkan kelajuan CPU","Menggantikan sistem operasi","Mematikan firewall"],
+   a:0,c:"Keselamatan Siber",d:"hard"},
+  {q:"Apakah tindakan terbaik jika menerima pautan mencurigakan melalui e-mel?",
+   o:["Klik untuk menyemak","Kongsi dengan semua rakan","Jangan klik; sahkan penghantar melalui saluran rasmi","Masukkan kata laluan untuk uji pautan"],
+   a:2,c:"Keselamatan Siber",d:"easy"},
+  {q:"Apakah fungsi firewall?",
+   o:["Mengawal trafik rangkaian berdasarkan peraturan keselamatan","Membaiki skrin pecah","Menyimpan gambar","Mencipta dokumen"],
+   a:0,c:"Rangkaian",d:"hard"},
+  {q:"Fail dengan sambungan .xlsx biasanya berkaitan dengan aplikasi apa?",
+   o:["Microsoft Excel","Microsoft Paint","Notepad","VLC Media Player"],
+   a:0,c:"Perisian",d:"easy"},
+  {q:"Mengapakah kemas kini perisian penting?",
+   o:["Supaya fail jadi lebih besar","Untuk membaiki pepijat dan menampal kelemahan keselamatan","Supaya komputer tidak perlu kata laluan","Untuk menghapuskan keperluan backup"],
+   a:1,c:"Penyelenggaraan",d:"easy"},
+  {q:"Apakah maksud LAN?",
+   o:["Local Area Network","Large Access Number","Linked App Name","Long Analog Node"],
+   a:0,c:"Rangkaian",d:"hard"}
+];
+
+const $ = id => document.getElementById(id);
+let questions = [], index = 0, score = 0, correct = 0;
+let seconds = 15, timer = null, locked = false, playerName = "Pemain";
+
+function shuffle(items) {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function startGame() {
+  clearInterval(timer);
+  playerName = $("player").value.trim() || "Pemain";
+  const difficulty = $("difficulty").value;
+  let pool = bank.filter(q =>
+    difficulty === "all" || q.d === difficulty
+  );
+  if (pool.length < 10) pool = bank;
+  questions = shuffle(pool).slice(0, 10);
+  index = 0;
+  score = 0;
+  correct = 0;
+  $("welcome").classList.add("hidden");
+  $("result").classList.add("hidden");
+  $("quiz").classList.remove("hidden");
+  $("playerTag").textContent = playerName;
+  showQuestion();
+}
+
+function showQuestion() {
+  locked = false;
+  clearInterval(timer);
+  const q = questions[index];
+  $("number").textContent = index + 1;
+  $("progress").style.width = (index / questions.length * 100) + "%";
+  $("category").textContent = q.c;
+  $("question").textContent = q.q;
+  $("feedback").textContent = "";
+  $("feedback").className = "";
+  $("next").classList.add("hidden");
+  $("options").replaceChildren();
+
+  q.o.forEach((answer, i) => {
+    const button = document.createElement("button");
+    button.className = "option";
+    const letter = document.createElement("span");
+    letter.className = "letter";
+    letter.textContent = String.fromCharCode(65 + i);
+    const text = document.createElement("span");
+    text.textContent = answer;
+    button.append(letter, text);
+    button.addEventListener("click", () => chooseAnswer(i));
+    $("options").append(button);
+  });
+
+  seconds = 15;
+  $("time").textContent = seconds;
+  timer = setInterval(() => {
+    seconds--;
+    $("time").textContent = seconds;
+    if (seconds <= 0) {
+      clearInterval(timer);
+      chooseAnswer(-1);
+    }
+  }, 1000);
+}
+
+function chooseAnswer(choice) {
+  if (locked) return;
+  locked = true;
+  clearInterval(timer);
+  const q = questions[index];
+  const buttons = [...$("options").querySelectorAll("button")];
+  buttons.forEach((button, i) => {
+    button.disabled = true;
+    if (i === q.a) button.classList.add("correct");
+    if (i === choice && choice !== q.a) button.classList.add("wrong");
+  });
+
+  if (choice === q.a) {
+    correct++;
+    score += Math.max(10, 10 + seconds * 2);
+    $("feedback").textContent = "✓ Betul! Bagus bah!";
+    $("feedback").className = "good";
+  } else {
+    $("feedback").textContent = choice === -1
+      ? "Masa tamat! Jawapan betul: " + q.o[q.a]
+      : "Belum tepat. Jawapan: " + q.o[q.a];
+    $("feedback").className = "bad";
+  }
+  $("progress").style.width =
+    ((index + 1) / questions.length * 100) + "%";
+  $("next").textContent = index === questions.length - 1
+    ? "LIHAT KEPUTUSAN →" : "SOALAN SETERUSNYA →";
+  $("next").classList.remove("hidden");
+}
+
+function nextQuestion() {
+  if (!locked) return;
+  index++;
+  if (index < questions.length) showQuestion();
+  else showResult();
+}
+
+function showResult() {
+  clearInterval(timer);
+  $("quiz").classList.add("hidden");
+  $("result").classList.remove("hidden");
+  const percentage = Math.round(correct / questions.length * 100);
+  $("resultTitle").textContent = "Syabas, " + playerName + "!";
+  $("finalScore").textContent = percentage;
+  $("correctCount").textContent = correct;
+  $("wrongCount").textContent = questions.length - correct;
+  $("accuracy").textContent = percentage + "%";
+  $("message").textContent = percentage === 100
+    ? "Perfect score! Memang mantap bah!"
+    : percentage >= 70
+      ? "Hebat! Pengetahuan ICT kau memang bagus."
+      : percentage >= 40
+        ? "Bagus sudah! Cuba lagi untuk tingkatkan skor."
+        : "Jangan putus asa. Belajar sikit-sikit, cuba lagi!";
+}
+
+$("start").addEventListener("click", startGame);
+$("next").addEventListener("click", nextQuestion);
+$("restart").addEventListener("click", () => {
+  $("result").classList.add("hidden");
+  $("welcome").classList.remove("hidden");
+});
+$("player").addEventListener("keydown", event => {
+  if (event.key === "Enter") startGame();
+});
+</script>
+</body>
+</html>
