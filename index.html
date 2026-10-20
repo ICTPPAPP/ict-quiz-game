@@ -204,9 +204,23 @@ footer {
     <div class="eyebrow">CHALLENGE YOURSELF</div>
     <h2>Ready untuk cabaran ICT?</h2>
     <p class="muted">Jawab 10 soalan, kejar masa dan tengok berapa tinggi skor kau.</p>
-    <label for="player">Nama pemain</label>
-    <input id="player" maxlength="30" placeholder="Masukkan nama kau">
-    <label for="difficulty">Tahap kesukaran</label>
+    <label for="player">Nama pemain *</label>
+<input
+  id="player"
+  maxlength="30"
+  placeholder="Masukkan nama kau"
+  required
+>
+
+<label for="email">E-mel rasmi organisasi *</label>
+<input
+  id="email"
+  type="email"
+  placeholder="nama@penanglib.gov.my"
+  required
+>
+
+<label for="difficulty">Tahap kesukaran</label>
     <select id="difficulty">
       <option value="all">Campuran</option>
       <option value="easy">Mudah</option>
@@ -312,20 +326,44 @@ function shuffle(items) {
 
 function startGame() {
   clearInterval(timer);
-  playerName = $("player").value.trim() || "Pemain";
+
+  const name = $("player").value.trim();
+  const email = $("email").value.trim().toLowerCase();
+
+  if (!name) {
+    alert("Sila masukkan nama pemain.");
+    $("player").focus();
+    return;
+  }
+
+  const emailPattern =
+    /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@penanglib\.gov\.my$/i;
+
+  if (!emailPattern.test(email)) {
+    alert("Sila gunakan e-mel rasmi @penanglib.gov.my.");
+    $("email").focus();
+    return;
+  }
+
+  playerName = name;
+
   const difficulty = $("difficulty").value;
   let pool = bank.filter(q =>
     difficulty === "all" || q.d === difficulty
   );
+
   if (pool.length < 10) pool = bank;
+
   questions = shuffle(pool).slice(0, 10);
   index = 0;
   score = 0;
   correct = 0;
+
   $("welcome").classList.add("hidden");
   $("result").classList.add("hidden");
   $("quiz").classList.remove("hidden");
   $("playerTag").textContent = playerName;
+
   showQuestion();
 }
 
