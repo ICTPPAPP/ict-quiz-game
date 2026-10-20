@@ -249,6 +249,9 @@ footer {
     <p class="muted">Inilah keputusan kau untuk sesi ini.</p>
     <div class="score"><span id="finalScore">0</span><span style="font-size:24px">/100</span></div>
     <p id="message"></p>
+    <p id="saveStatus" class="muted" aria-live="polite">
+  Keputusan belum disimpan.
+</p>
     <div class="stats">
       <div class="stat"><strong id="correctCount">0</strong><span>Betul</span></div>
       <div class="stat"><strong id="wrongCount">0</strong><span>Salah</span></div>
@@ -312,6 +315,12 @@ const bank = [
 ];
 
 const $ = id => document.getElementById(id);
+  
+const BACKEND_URL = "https://script.google.com/a/macros/penanglib.gov.my/s/AKfycbxZ7ng_4zoJZVTfuDaSTWhiXaLLrg6t-_28KJttB88EBGCfW-b0AB25Ary34XkCc_rZ/exec";
+
+let playerEmail = "";
+let gameStartedAt = 0;
+
 let questions = [], index = 0, score = 0, correct = 0;
 let seconds = 15, timer = null, locked = false, playerName = "Pemain";
 
@@ -345,7 +354,9 @@ function startGame() {
     return;
   }
 
-  playerName = name;
+playerName = name;
+playerEmail = email;
+gameStartedAt = Date.now();
 
   const difficulty = $("difficulty").value;
   let pool = bank.filter(q =>
@@ -446,7 +457,7 @@ function showResult() {
   clearInterval(timer);
   $("quiz").classList.add("hidden");
   $("result").classList.remove("hidden");
-  const percentage = Math.round(correct / questions.length * 100);
+  const percentage = Math.round(correct / questions.length * 100);saveScore(percentage);
   $("resultTitle").textContent = "Syabas, " + playerName + "!";
   $("finalScore").textContent = percentage;
   $("correctCount").textContent = correct;
@@ -459,6 +470,42 @@ function showResult() {
       : percentage >= 40
         ? "Bagus sudah! Cuba lagi untuk tingkatkan skor."
         : "Jangan putus asa. Belajar sikit-sikit, cuba lagi!";
+}
+
+  
+async function saveScore(percentage) {
+  const status = $("saveStatus");
+  status.textContent = "Menghantar keputusan ke server...";
+
+  const duration = Math.max(
+    0,
+    Math.round((Date.now() - gameStartedAt) / 1000)
+  );
+
+  const data = new URLSearchParams({
+    name: playerName,
+    email: playerEmail,
+    score: String(percentage),
+    total: "100",
+    duration: String(duration)
+  });
+
+  try {
+    // no-cors membolehkan permintaan ringkas dihantar,
+    // tetapi browser tidak membenarkan respons dibaca.
+    await fetch(BACKEND_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: data
+    });
+
+    status.textContent =
+      "Permintaan dihantar. Sila semak Google Sheet untuk mengesahkan simpanan.";
+  } catch (error) {
+    status.textContent =
+      "Penghantaran gagal. Sila cuba semula atau hubungi staf ICT.";
+    console.error("Ralat simpan markah:", error);
+  }
 }
 
 $("start").addEventListener("click", startGame);
