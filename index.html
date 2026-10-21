@@ -190,6 +190,113 @@ footer {
   .topline { align-items: flex-start; flex-wrap: wrap; }
   .stats { gap: 7px; }
 }
+  
+/* PREMIUM LEADERBOARD */
+#leaderboard {
+  margin-top: 24px;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 20px;
+  background: linear-gradient(145deg, #151d31, #0b1020);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+}
+
+#leaderboard h2 {
+  margin: 8px 0;
+  color: #f5d77a;
+  font-size: 1.45rem;
+}
+
+#leaderboard .eyebrow {
+  color: #a8b8d8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+#leaderboard .muted,
+#leaderboardStatus {
+  color: #aab6cc;
+  font-size: 0.9rem;
+}
+
+.leaderboard-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 18px 0;
+  border-radius: 12px;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #edf2ff;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.leaderboard-table th {
+  padding: 13px 10px;
+  color: #f5d77a;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.leaderboard-table td {
+  padding: 14px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.leaderboard-table tbody tr:first-child {
+  background: rgba(255, 215, 0, 0.10);
+}
+
+.leaderboard-table tbody tr:nth-child(2) {
+  background: rgba(192, 192, 192, 0.07);
+}
+
+.leaderboard-table tbody tr:nth-child(3) {
+  background: rgba(205, 127, 50, 0.08);
+}
+
+.leaderboard-table .rank {
+  font-size: 1.15rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.leaderboard-table .player-name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.leaderboard-table .player-score {
+  color: #f5d77a;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+#refreshLeaderboard {
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  #leaderboard {
+    padding: 16px;
+  }
+
+  .leaderboard-table {
+    font-size: 0.8rem;
+  }
+
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: 11px 7px;
+  }
+}
 </style>
 </head>
 <body>
@@ -632,8 +739,50 @@ function loadLeaderboard() {
       return;
     }
 
-    const players = data.leaderboard.slice(0, 10);
-    const table = document.createElement("table");
+const players = data.leaderboard.slice(0, 10);
+
+const table = document.createElement("table");
+table.className = "leaderboard-table";
+
+const thead = document.createElement("thead");
+const header = thead.insertRow();
+
+["Rank", "Nama Staf", "Markah", "Masa (s)"].forEach(label => {
+  const th = document.createElement("th");
+  th.textContent = label;
+  header.appendChild(th);
+});
+
+table.appendChild(thead);
+
+const tbody = document.createElement("tbody");
+
+const medals = ["🥇", "🥈", "🥉"];
+
+players.forEach((player, index) => {
+  const row = tbody.insertRow();
+
+  const rank = row.insertCell();
+  rank.className = "rank";
+  rank.textContent = medals[index] || `#${index + 1}`;
+
+  const name = row.insertCell();
+  name.className = "player-name";
+  name.textContent = player.name || "-";
+
+  const score = row.insertCell();
+  score.className = "player-score";
+  score.textContent = `${player.score ?? 0}/${player.total ?? 0}`;
+
+  const duration = row.insertCell();
+  duration.textContent = player.duration ?? "-";
+});
+
+table.appendChild(tbody);
+
+const wrapper = document.createElement("div");
+wrapper.className = "leaderboard-table-wrap";
+wrapper.appendChild(table);
 
     const header = table.insertRow();
 
@@ -666,7 +815,7 @@ function loadLeaderboard() {
       return;
     }
 
-    list.replaceChildren(table);
+list.replaceChildren(wrapper);
     status.textContent = "Top 10 ICT Quiz PPAPP";
   };
 
