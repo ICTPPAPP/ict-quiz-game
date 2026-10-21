@@ -528,108 +528,129 @@ $("player").addEventListener("keydown", event => {
 });
   
 
-
 let leaderboardLoading = false;
-let leaderboardRequestTimer = null;
+let leaderboardRequestId = 0;
 
 function loadLeaderboard() {
   const status = document.getElementById("leaderboardStatus");
   const list = document.getElementById("leaderboardList");
+  const button = document.querySelector(
+    '#leaderboard button[onclick="loadLeaderboard()"]'
+  );
 
   if (!status || !list) {
-    console.error("Elemen leaderboard tidak dijumpai.");
+    console.error("Leaderboard elements are missing.");
     return;
   }
 
-  // Elakkan permintaan bertindih
+  // Prevent overlapping requests
   if (leaderboardLoading) return;
 
   leaderboardLoading = true;
+  const requestId = ++leaderboardRequestId;
+
+  let script = null;
+  let timeoutId = null;
+  let finished = false;
+
   status.textContent = "Memuatkan leaderboard...";
   list.replaceChildren();
 
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Memuatkan...";
+  }
+
   const callbackName =
-    "receiveLeaderboard_" +
-    Date.now() +
-    "_" +
+    "ictLeaderboardCallback_" + requestId + "_" +
     Math.random().toString(36).slice(2, 8);
 
-  const script = document.createElement("script");
-  let completed = false;
+  function cleanup() {
+    if (finished) return;
+    finished = true;
 
-  function finish(message) {
-    if (completed) return;
-
-    completed = true;
-    leaderboardLoading = false;
-    clearTimeout(leaderboardRequestTimer);
-
+    clearTimeout(timeoutId);
     delete window[callbackName];
-    script.remove();
 
-    if (message) {
-      status.textContent = message;
+    if (script) script.remove();
+
+    leaderboardLoading = false;
+
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Muat Semula";
     }
   }
 
-  // Tamatkan permintaan jika server terlalu lambat
-  leaderboardRequestTimer = setTimeout(() => {
-    finish("Server mengambil masa terlalu lama. Cuba muat semula.");
-  }, 12000);
+  function fail(message, error) {
+    cleanup();
 
-  window[callbackName] = function (data) {
-    if (!data || data.success !== true ||
-        !Array.isArray(data.leaderboard)) {
-      finish("Respons server tidak sah. Sila cuba lagi.");
+    status.textContent = message;
+    list.replaceChildren();
+
+    if (error) console.error("Leaderboard error:", error);
+  }
+
+  window[callbackName] = function(data) {
+    if (finished) return;
+
+    if (
+      !data ||
+      data.success !== true ||
+      !Array.isArray(data.leaderboard)
+    ) {
+      fail("Respons leaderboard tidak sah.");
       return;
     }
 
     const players = data.leaderboard.slice(0, 10);
-    const fragment = document.createDocumentFragment();
-
-    if (players.length === 0) {
-      finish("Belum ada rekod markah.");
-      return;
-    }
-
     const table = document.createElement("table");
-    const thead = table.createTHead();
-    const headerRow = thead.insertRow();
+
+    const header = table.insertRow();
 
     ["Kedudukan", "Nama", "Markah", "Masa (saat)"]
       .forEach(label => {
         const th = document.createElement("th");
         th.textContent = label;
-        headerRow.appendChild(th);
+        header.appendChild(th);
       });
 
-    const tbody = table.createTBody();
-
     players.forEach((player, index) => {
-      const row = tbody.insertRow();
+      const row = table.insertRow();
 
-      const values = [
+      [
         index + 1,
         player.name || "-",
         `${player.score ?? 0}/${player.total ?? 0}`,
         player.duration ?? "-"
-      ];
-
-      values.forEach(value => {
+      ].forEach(value => {
         const cell = row.insertCell();
         cell.textContent = String(value);
       });
     });
 
-    fragment.appendChild(table);
-    list.replaceChildren(fragment);
+    cleanup();
 
-    finish(`🏆 Top ${players.length} ICT Quiz PPAPP`);
+    if (players.length === 0) {
+      status.textContent = "Belum ada rekod markah.";
+      list.replaceChildren();
+      return;
+    }
+
+    list.replaceChildren(table);
+    status.textContent = "Top 10 ICT Quiz PPAPP";
   };
 
-  script.onerror = function () {
-    finish("Gagal menghubungi server. Semak sambungan internet.");
+  script = document.createElement("script");
+  script.async = true;
+
+  script.onerror = function() {
+    fail("Gagal menghubungi server. Cuba lagi.");
   };
+
+  timeoutId = setTimeout(() => {
+    fail("Server mengambil masa terlalu lama. Cuba lagi.");
+  }, 15000);
 
   script.src =
     BACKEND_URL +
@@ -640,12 +661,7 @@ function loadLeaderboard() {
   document.body.appendChild(script);
 }
 
-// Muatkan leaderboard apabila halaman sedia
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", loadLeaderboard);
-} else {
-  loadLeaderboard();
-}
+document.addEventListener("DOMContentLoaded", loadLeaderboard);
   
 </script>
 </body>
