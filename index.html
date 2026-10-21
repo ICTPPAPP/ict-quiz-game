@@ -249,18 +249,47 @@ footer {
     <p class="muted">Inilah keputusan kau untuk sesi ini.</p>
     <div class="score"><span id="finalScore">0</span><span style="font-size:24px">/100</span></div>
     <p id="message"></p>
-    <p id="saveStatus" class="muted" aria-live="polite">
-      <section id="leaderboard" class="card">
+
+<p id="saveStatus" class="muted" aria-live="polite">
+  Keputusan belum disimpan.
+</p>
+
+<div class="stats">
+  <div class="stat">
+    <strong id="correctCount">0</strong>
+    <span>Betul</span>
+  </div>
+  <div class="stat">
+    <strong id="wrongCount">0</strong>
+    <span>Salah</span>
+  </div>
+  <div class="stat">
+    <strong id="accuracy">0%</strong>
+    <span>Ketepatan</span>
+  </div>
+</div>
+
+<button class="btn primary" id="restart">
+  MAIN LAGI ↻
+</button>
+</section>
+
+<section class="card" id="leaderboard">
+  <div class="eyebrow">KEDUDUKAN PEMAIN</div>
   <h2>🏆 Leaderboard ICT Quiz</h2>
   <p class="muted">10 staf terbaik PPAPP</p>
-  <p id="leaderboardStatus">Memuatkan kedudukan...</p>
+  <p id="leaderboardStatus" aria-live="polite">
+    Memuatkan kedudukan...
+  </p>
   <div id="leaderboardList"></div>
-  <button type="button" onclick="loadLeaderboard()">
+  <button
+    type="button"
+    class="btn secondary"
+    id="refreshLeaderboard"
+  >
     Muat Semula
   </button>
 </section>
-  Keputusan belum disimpan.
-</p>
     <div class="stats">
       <div class="stat"><strong id="correctCount">0</strong><span>Betul</span></div>
       <div class="stat"><strong id="wrongCount">0</strong><span>Salah</span></div>
