@@ -526,6 +526,72 @@ $("restart").addEventListener("click", () => {
 $("player").addEventListener("keydown", event => {
   if (event.key === "Enter") startGame();
 });
+  
+function loadLeaderboard() {
+  const status = document.getElementById("leaderboardStatus");
+  const list = document.getElementById("leaderboardList");
+
+  status.textContent = "Memuatkan kedudukan...";
+  list.replaceChildren();
+
+  // Callback untuk menerima data daripada Apps Script
+  window.receiveLeaderboard = function(data) {
+    if (!data || !data.success || !Array.isArray(data.leaderboard)) {
+      status.textContent = "Gagal mendapatkan data leaderboard.";
+      return;
+    }
+
+    list.replaceChildren();
+
+    if (data.leaderboard.length === 0) {
+      status.textContent = "Belum ada rekod markah.";
+      return;
+    }
+
+    status.textContent = "Kedudukan 10 staf terbaik";
+
+    const table = document.createElement("table");
+    const header = table.insertRow();
+
+    ["Kedudukan", "Nama", "Markah", "Masa (saat)"].forEach(text => {
+      const th = document.createElement("th");
+      th.textContent = text;
+      header.appendChild(th);
+    });
+
+    data.leaderboard.slice(0, 10).forEach((player, index) => {
+      const row = table.insertRow();
+
+      [
+        index + 1,
+        player.name,
+        `${player.score}/${player.total}`,
+        player.duration
+      ].forEach(value => {
+        const cell = row.insertCell();
+        cell.textContent = value;
+      });
+    });
+
+    list.appendChild(table);
+  };
+
+  const oldScript = document.getElementById("leaderboardScript");
+  if (oldScript) oldScript.remove();
+
+  const script = document.createElement("script");
+  script.id = "leaderboardScript";
+  script.src = BACKEND_URL + "?action=leaderboard&callback=receiveLeaderboard";
+  script.onerror = function() {
+    status.textContent = "Gagal menghubungi server. Cuba muat semula.";
+  };
+
+  document.body.appendChild(script);
+}
+
+// Muatkan leaderboard apabila halaman dibuka
+loadLeaderboard();
+
 </script>
 </body>
 </html>
