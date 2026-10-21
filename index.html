@@ -527,71 +527,126 @@ $("player").addEventListener("keydown", event => {
   if (event.key === "Enter") startGame();
 });
   
+
+
+let leaderboardLoading = false;
+let leaderboardRequestTimer = null;
+
 function loadLeaderboard() {
   const status = document.getElementById("leaderboardStatus");
   const list = document.getElementById("leaderboardList");
 
-  status.textContent = "Memuatkan kedudukan...";
+  if (!status || !list) {
+    console.error("Elemen leaderboard tidak dijumpai.");
+    return;
+  }
+
+  // Elakkan permintaan bertindih
+  if (leaderboardLoading) return;
+
+  leaderboardLoading = true;
+  status.textContent = "Memuatkan leaderboard...";
   list.replaceChildren();
 
-  // Callback untuk menerima data daripada Apps Script
-  window.receiveLeaderboard = function(data) {
-    if (!data || !data.success || !Array.isArray(data.leaderboard)) {
-      status.textContent = "Gagal mendapatkan data leaderboard.";
+  const callbackName =
+    "receiveLeaderboard_" +
+    Date.now() +
+    "_" +
+    Math.random().toString(36).slice(2, 8);
+
+  const script = document.createElement("script");
+  let completed = false;
+
+  function finish(message) {
+    if (completed) return;
+
+    completed = true;
+    leaderboardLoading = false;
+    clearTimeout(leaderboardRequestTimer);
+
+    delete window[callbackName];
+    script.remove();
+
+    if (message) {
+      status.textContent = message;
+    }
+  }
+
+  // Tamatkan permintaan jika server terlalu lambat
+  leaderboardRequestTimer = setTimeout(() => {
+    finish("Server mengambil masa terlalu lama. Cuba muat semula.");
+  }, 12000);
+
+  window[callbackName] = function (data) {
+    if (!data || data.success !== true ||
+        !Array.isArray(data.leaderboard)) {
+      finish("Respons server tidak sah. Sila cuba lagi.");
       return;
     }
 
-    list.replaceChildren();
+    const players = data.leaderboard.slice(0, 10);
+    const fragment = document.createDocumentFragment();
 
-    if (data.leaderboard.length === 0) {
-      status.textContent = "Belum ada rekod markah.";
+    if (players.length === 0) {
+      finish("Belum ada rekod markah.");
       return;
     }
-
-    status.textContent = "Kedudukan 10 staf terbaik";
 
     const table = document.createElement("table");
-    const header = table.insertRow();
+    const thead = table.createTHead();
+    const headerRow = thead.insertRow();
 
-    ["Kedudukan", "Nama", "Markah", "Masa (saat)"].forEach(text => {
-      const th = document.createElement("th");
-      th.textContent = text;
-      header.appendChild(th);
-    });
+    ["Kedudukan", "Nama", "Markah", "Masa (saat)"]
+      .forEach(label => {
+        const th = document.createElement("th");
+        th.textContent = label;
+        headerRow.appendChild(th);
+      });
 
-    data.leaderboard.slice(0, 10).forEach((player, index) => {
-      const row = table.insertRow();
+    const tbody = table.createTBody();
 
-      [
+    players.forEach((player, index) => {
+      const row = tbody.insertRow();
+
+      const values = [
         index + 1,
-        player.name,
-        `${player.score}/${player.total}`,
-        player.duration
-      ].forEach(value => {
+        player.name || "-",
+        `${player.score ?? 0}/${player.total ?? 0}`,
+        player.duration ?? "-"
+      ];
+
+      values.forEach(value => {
         const cell = row.insertCell();
-        cell.textContent = value;
+        cell.textContent = String(value);
       });
     });
 
-    list.appendChild(table);
+    fragment.appendChild(table);
+    list.replaceChildren(fragment);
+
+    finish(`🏆 Top ${players.length} ICT Quiz PPAPP`);
   };
 
-  const oldScript = document.getElementById("leaderboardScript");
-  if (oldScript) oldScript.remove();
-
-  const script = document.createElement("script");
-  script.id = "leaderboardScript";
-  script.src = BACKEND_URL + "?action=leaderboard&callback=receiveLeaderboard";
-  script.onerror = function() {
-    status.textContent = "Gagal menghubungi server. Cuba muat semula.";
+  script.onerror = function () {
+    finish("Gagal menghubungi server. Semak sambungan internet.");
   };
+
+  script.src =
+    BACKEND_URL +
+    "?action=leaderboard&callback=" +
+    encodeURIComponent(callbackName) +
+    "&_=" + Date.now();
 
   document.body.appendChild(script);
 }
 
-// Muatkan leaderboard apabila halaman dibuka
-loadLeaderboard();
-
+// Muatkan leaderboard apabila halaman sedia
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", loadLeaderboard);
+} else {
+  loadLeaderboard();
+}
+  
 </script>
 </body>
 </html>
