@@ -397,13 +397,6 @@ footer {
     Muat Semula
   </button>
 </section>
-    <div class="stats">
-      <div class="stat"><strong id="correctCount">0</strong><span>Betul</span></div>
-      <div class="stat"><strong id="wrongCount">0</strong><span>Salah</span></div>
-      <div class="stat"><strong id="accuracy">0%</strong><span>Ketepatan</span></div>
-    </div>
-    <button class="btn primary" id="restart">MAIN LAGI ↻</button>
-  </section>
   <footer>ICT QUIZ ARENA · Built for curious minds</footer>
 </main>
 
@@ -670,21 +663,18 @@ let leaderboardRequestId = 0;
 function loadLeaderboard() {
   const status = document.getElementById("leaderboardStatus");
   const list = document.getElementById("leaderboardList");
-  const button = document.querySelector(
-    '#leaderboard button[onclick="loadLeaderboard()"]'
-  );
+  const button = document.getElementById("refreshLeaderboard");
 
   if (!status || !list) {
-    console.error("Leaderboard elements are missing.");
+    console.error("Elemen leaderboard tidak dijumpai.");
     return;
   }
 
-  // Prevent overlapping requests
   if (leaderboardLoading) return;
-
   leaderboardLoading = true;
-  const requestId = ++leaderboardRequestId;
 
+  const requestId = ++leaderboardRequestId;
+  const callbackName = "ictLeaderboardCallback_" + requestId;
   let script = null;
   let timeoutId = null;
   let finished = false;
@@ -697,14 +687,9 @@ function loadLeaderboard() {
     button.textContent = "Memuatkan...";
   }
 
-  const callbackName =
-    "ictLeaderboardCallback_" + requestId + "_" +
-    Math.random().toString(36).slice(2, 8);
-
   function cleanup() {
     if (finished) return;
     finished = true;
-
     clearTimeout(timeoutId);
     delete window[callbackName];
 
@@ -718,13 +703,10 @@ function loadLeaderboard() {
     }
   }
 
-  function fail(message, error) {
+  function fail(message) {
     cleanup();
-
     status.textContent = message;
     list.replaceChildren();
-
-    if (error) console.error("Leaderboard error:", error);
   }
 
   window[callbackName] = function(data) {
@@ -739,73 +721,7 @@ function loadLeaderboard() {
       return;
     }
 
-const players = data.leaderboard.slice(0, 10);
-
-const table = document.createElement("table");
-table.className = "leaderboard-table";
-
-const thead = document.createElement("thead");
-const header = thead.insertRow();
-
-["Rank", "Nama Staf", "Markah", "Masa (s)"].forEach(label => {
-  const th = document.createElement("th");
-  th.textContent = label;
-  header.appendChild(th);
-});
-
-table.appendChild(thead);
-
-const tbody = document.createElement("tbody");
-
-const medals = ["🥇", "🥈", "🥉"];
-
-players.forEach((player, index) => {
-  const row = tbody.insertRow();
-
-  const rank = row.insertCell();
-  rank.className = "rank";
-  rank.textContent = medals[index] || `#${index + 1}`;
-
-  const name = row.insertCell();
-  name.className = "player-name";
-  name.textContent = player.name || "-";
-
-  const score = row.insertCell();
-  score.className = "player-score";
-  score.textContent = `${player.score ?? 0}/${player.total ?? 0}`;
-
-  const duration = row.insertCell();
-  duration.textContent = player.duration ?? "-";
-});
-
-table.appendChild(tbody);
-
-const wrapper = document.createElement("div");
-wrapper.className = "leaderboard-table-wrap";
-wrapper.appendChild(table);
-
-    const header = table.insertRow();
-
-    ["Kedudukan", "Nama", "Markah", "Masa (saat)"]
-      .forEach(label => {
-        const th = document.createElement("th");
-        th.textContent = label;
-        header.appendChild(th);
-      });
-
-    players.forEach((player, index) => {
-      const row = table.insertRow();
-
-      [
-        index + 1,
-        player.name || "-",
-        `${player.score ?? 0}/${player.total ?? 0}`,
-        player.duration ?? "-"
-      ].forEach(value => {
-        const cell = row.insertCell();
-        cell.textContent = String(value);
-      });
-    });
+    const players = data.leaderboard.slice(0, 10);
 
     cleanup();
 
@@ -815,7 +731,51 @@ wrapper.appendChild(table);
       return;
     }
 
-list.replaceChildren(wrapper);
+    const table = document.createElement("table");
+    table.className = "leaderboard-table";
+
+    const thead = document.createElement("thead");
+    const header = thead.insertRow();
+
+    ["Kedudukan", "Nama Staf", "Markah", "Masa (saat)"]
+      .forEach(label => {
+        const th = document.createElement("th");
+        th.textContent = label;
+        header.appendChild(th);
+      });
+
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    const medals = ["🥇", "🥈", "🥉"];
+
+    players.forEach((player, index) => {
+      const row = tbody.insertRow();
+
+      const rank = row.insertCell();
+      rank.className = "rank";
+      rank.textContent = medals[index] || `#${index + 1}`;
+
+      const name = row.insertCell();
+      name.className = "player-name";
+      name.textContent = player.name || "-";
+
+      const scoreCell = row.insertCell();
+      scoreCell.className = "player-score";
+      scoreCell.textContent =
+        `${player.score ?? 0}/${player.total ?? 0}`;
+
+      const duration = row.insertCell();
+      duration.textContent = player.duration ?? "-";
+    });
+
+    table.appendChild(tbody);
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "leaderboard-table-wrap";
+    wrapper.appendChild(table);
+
+    list.replaceChildren(wrapper);
     status.textContent = "Top 10 ICT Quiz PPAPP";
   };
 
@@ -839,8 +799,11 @@ list.replaceChildren(wrapper);
   document.body.appendChild(script);
 }
 
+document.getElementById("refreshLeaderboard")
+  ?.addEventListener("click", loadLeaderboard);
+
 document.addEventListener("DOMContentLoaded", loadLeaderboard);
-  
+
 </script>
 </body>
 </html>
